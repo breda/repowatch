@@ -19,13 +19,14 @@ type PullRequest struct {
 	CreatedBy          string
 	CreatedAt          time.Time
 	RequestedReviewers []string // List of teams requested for review
+	Link			   string
 	Summary            string
 }
 
 func FetchPullRequests(config *Config) []*PullRequest {
 	ret := make([]*PullRequest, 0)
 
-	client := github.NewClient(nil).WithAuthToken(config.GithubToken)
+	client := github.NewClient(nil).WithAuthToken(config.Github.Token)
 
 	for _, repoDef := range config.Repos {
 		nameParts := strings.Split(repoDef.Name, "/")
@@ -51,7 +52,13 @@ func FetchPullRequests(config *Config) []*PullRequest {
 
 		// Convert to our format
 		for _, prData := range githubPRs {
-			diff := getPullRequestDiff(client, owner, repo, *prData.Number)
+			if len(ret) == repoDef.LimitNum {
+				break
+			}
+
+			if prOlderThanLimit(prData.CreatedAt.Time, repoDef.LimitDays) {
+				continue;
+			}
 
 			pr := &PullRequest{
 				Draft:              *prData.Draft,
@@ -61,7 +68,11 @@ func FetchPullRequests(config *Config) []*PullRequest {
 				CreatedBy:          *prData.User.Login,
 				CreatedAt:          prData.CreatedAt.Time,
 				RequestedReviewers: make([]string, 0),
-				Summary:            GetDiffSummary(config.LlmConfig, diff),
+			}
+
+			if (config.Features.Summary) {
+				diff := getPullRequestDiff(client, owner, repo, *prData.Number)
+				pr.Summary = GetDiffSummary(config.LlmConfig, diff)
 			}
 
 			for _, requestedTeam := range prData.RequestedTeams {
@@ -73,6 +84,15 @@ func FetchPullRequests(config *Config) []*PullRequest {
 	}
 
 	return ret
+}
+
+func prOlderThanLimit(prCreationDate time.Time, limitDays int) bool {
+	now := time.Now()
+
+	duration := time.Duration(limitDays) * 24 * time.Hour
+	threshold := now.Add(-duration)
+
+	return prCreationDate.Before(threshold)
 }
 
 func getPullRequestDiff(client *github.Client, owner string, repo string, number int) string {

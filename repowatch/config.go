@@ -8,10 +8,8 @@ import (
 
 const DEFAULT_CONFI_FILE_PATH = "./config.yaml"
 
-type RepoDef struct {
-	Name      string `yaml:"name"`
-	LimitNum  int    `yaml:"limitNum"`
-	LimitDays int    `yaml:"limitDays"`
+type Github struct {
+	Token string `yaml:"token"`
 }
 
 type LlmConfig struct {
@@ -19,8 +17,20 @@ type LlmConfig struct {
 	Port string `yaml:"port"`
 }
 
+type Features struct {
+	Summary bool `yaml:"summary"`
+}
+
+type RepoDef struct {
+	Name      string `yaml:"name"`
+	LimitNum  int    `yaml:"limitNum"`
+	LimitDays int    `yaml:"limitDays"`
+}
+
+
 type Config struct {
-	GithubToken string    `yaml:"github_token"`
+	Github      Github `yaml:"github"`
+	Features    Features `yaml:"features"`
 	LlmConfig   LlmConfig `yaml:"llm"`
 	Repos       []RepoDef `yaml:"repos"`
 }

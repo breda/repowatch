@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"repowatch/repowatch"
 )
 
@@ -12,8 +11,5 @@ func main() {
 	}
 
 	pullRequests := repowatch.FetchPullRequests(config)
-
-	for _, pr := range pullRequests {
-		fmt.Println(pr.String())
-	}
+	repowatch.TablePrint(pullRequests)
 }

@@ -1,6 +1,12 @@
 ---
 
-github_token: token
+
+github: 
+  token: INSERT_TOKEN
+
+features:
+  summary: false
+
 
 llm:
   host: 127.0.0.1
